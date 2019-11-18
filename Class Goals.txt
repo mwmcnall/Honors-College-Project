@@ -1,0 +1,17 @@
+Class Goals
+
+	So for this branch I want to focus on getting the class in the way that I want. Here are some basic ideas I have atm that I want
+	to accomplish
+	
+	Organizational goals:
+		- Make nans more efficient by not having a comparison on every
+		iteration
+		- Update _type_correction() with all necessary changes
+		- Write a proper docstring for _feature_engineering()
+	
+	Methods
+		- _div_featuers and _bin_featuers are almost exactly the same,
+		I'm sure I can abstract them into a single function that takes
+		in a dictionary instead
+		- New method to handle all the ethnicity data summation
+		- New method to handle summation of all grade data
