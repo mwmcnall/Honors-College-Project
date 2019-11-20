@@ -4,10 +4,7 @@ Class Goals
 	to accomplish
 	
 	Organizational goals:
-		- Make nans more efficient by not having a comparison on every
-		iteration
-		- Update _type_correction() with all necessary changes
-		- Write a proper docstring for _feature_engineering()
-		- The assignment within _feature_engineering() is lazy and should be put in a better spot somewhere
+		-
 	
 	Methods
+		- 
