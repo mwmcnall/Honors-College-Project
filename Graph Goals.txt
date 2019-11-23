@@ -1,0 +1,30 @@
+Graph Goals
+
+	Now that the class is defined and my data munging / feature engineering is where I want it to be, I want to do some basic graphs
+	and exploring of the dataset
+	
+	Organizational goals:
+		- Sketch some graphs that I want to create
+	
+	Methods
+		- Create some specific graphing methods for each Class
+		
+	Ideas
+		So, what is the next goal for graphs? What do we want to visualize currently?
+		I want to work with Total Prop 4 % and the Math / ELA varients of those, but the question becomes:
+			- What do you want to compare it against?
+			- What type of graph do you want to utilize?
+		- Average ELA / Math Proficiency
+		
+		
+	Notes
+		- There are schools where the Percent of students chronically absent is 100%
+		- Student Tested 4s is > Student Tested Totals in a few schools, which should be impossible
+			The reason this happens is that the way I calculate 'Student Tested 4s' is by adding all the totals of 'Math Tested 4s' for each grade
+			to 'ELA Tested 4s' for each grade. And the way I calculate 'Student Tested Total' is by adding 'Math Tested Total' for each grade to 
+			'ELA Tested Total' for each grade. So therefore, if there is enough overlap of kids who score 4s on both, than it's possible to get
+			a situation where you get over 100% 'Total 4 %'. I think this is less about changing how I calculate the column, and more giving it a more
+			accurate name. It no longer represents the 'Total 4 %' of the school, it now more represents the 'Success %', which sounds a little more vague
+			but is more accurate. I think if I calcualte the 'Total Math 4 %' and the 'Total ELA 4 %' than average them, that will be more accurate
+			of a representation.
+		- 'Math Tested Total' is returning 0 for some rows. My theory is that it's not counting 'Grade 3' correctly
