@@ -19,8 +19,7 @@ Graph Goals
 				- SchoolData
 
 	Methods
-		- Create some specific graphing methods for each Class
-		- Organize classes in order, privates and publics together, by theme, etc.
+		- Add a possible regression line method to graphs
 
 	Ideas
 		So, what is the next goal for graphs? What do we want to visualize currently?

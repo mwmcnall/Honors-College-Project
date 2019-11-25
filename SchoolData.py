@@ -711,32 +711,34 @@ df = pd.read_csv('2016 School Explorer.csv')
 # print(df.shape)
 # Load data into a SchoolData Class
 data = SchoolData(df, figwidth=11, figheight=7)
+
+# data.sum_col_barplot(cols = ['Grade 3 4s Total', 'Grade 4 4s Total',
+#     'Grade 5 4s Total','Grade 6 4s Total','Grade 7 4s Total',
+#     'Grade 8 4s Total'], names = ['Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
+#     'Grade 7', 'Grade 8'], title = 'Number of 4s Scored by Grade',
+#     xlabel = 'Grade', ylabel = 'Number of 4s',
+#     pos_gap = 40)
+#
+# cols = data.column_generator(subject = 'both')
+# data.two_shared_barplot(barWidth = 1,
+#                         col_1 = [i for i in cols if 'Math' in i],
+#                         col_2 = [i for i in cols if 'ELA' in i],
+#                         label_1 = 'Math',
+#                         label_2 = 'ELA',
+#                         section_labels = ['Grade 3', 'Grade 4', 'Grade 5',
+#                             'Grade 6', 'Grade 7', 'Grade 8'],
+#                         title = 'Proportion of 4s by Subject',
+#                         xlabel = 'Grades',
+#                         ylabel = '% of 4s')
+#
+# data.scatter_two_percs(['Percent of Students Chronically Absent', 'Total 4 %'],
+#      title = "Total 4 % for Chronically Absent Students")
+#
+# data.scatter_two_percs(['Economic Need Index', 'Total 4 %'],
+#      title = "Total 4 % by ENI")
+
+#%% 
 data.df.head(1)
 #%%
-data.sum_col_barplot(cols = ['Grade 3 4s Total', 'Grade 4 4s Total',
-    'Grade 5 4s Total','Grade 6 4s Total','Grade 7 4s Total',
-    'Grade 8 4s Total'], names = ['Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
-    'Grade 7', 'Grade 8'], title = 'Number of 4s Scored by Grade',
-    xlabel = 'Grade', ylabel = 'Number of 4s',
-    pos_gap = 40)
-
-#%%
-cols = data.column_generator(subject = 'both')
-data.two_shared_barplot(barWidth = 1,
-                        col_1 = [i for i in cols if 'Math' in i],
-                        col_2 = [i for i in cols if 'ELA' in i],
-                        label_1 = 'Math',
-                        label_2 = 'ELA',
-                        section_labels = ['Grade 3', 'Grade 4', 'Grade 5',
-                            'Grade 6', 'Grade 7', 'Grade 8'],
-                        title = 'Proportion of 4s by Subject',
-                        xlabel = 'Grades',
-                        ylabel = '% of 4s')
-
-# %%
-data.scatter_two_percs(['Percent of Students Chronically Absent', 'Total 4 %'],
-     title = "Total 4 % for Chronically Absent Students")
-
-#%%
-data.scatter_two_percs(['Economic Need Index', 'Total 4 %'],
-     title = "Total 4 % by ENI")
+data.scatter_two_percs(['Percent Hispanic', 'Total 4 %'],
+     title = "")
