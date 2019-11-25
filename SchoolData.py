@@ -51,6 +51,12 @@ class DataContainer:
 
         return
 
+    def corr_one_col(self, col, low_bound = -1, high_bound = 1):
+        corr = data.df.corr()[col].sort_values()
+        corr = corr[corr > low_bound]
+        corr = corr[corr < high_bound]
+        return corr
+
     def nans(self, threshold=0, silence=False):
         """
         Shows the number of NaN values per column if the parameter silence is
@@ -296,7 +302,7 @@ class Graph(DataContainer):
                 y_bounds=None, alpha=1, c=None, label_percs = False,
                 rev_x = False, rev_y = False, x_low_limit = -9**999,
                 x_high_limit=9**999, y_low_limit = -9**999,
-                y_high_limit=9**999):
+                y_high_limit=9**999, reg_line = False):
         """
         Creates a scatterplot of the data given
 
@@ -324,19 +330,19 @@ class Graph(DataContainer):
                         (self.df[x_col] <= x_high_limit) &
                         (self.df[y_col] >= y_low_limit) &
                         (self.df[y_col] <= y_high_limit)]
-
-        ax.scatter(scatter_data[x_col],
-                   scatter_data[y_col],
+        x = scatter_data[x_col]
+        y = scatter_data[y_col]
+        ax.scatter(x, y,
                     alpha=alpha,
                     c=c)
         ax.grid(True)
 
         if rev_x:
-            ax.set_xlim(max(self.df[x_col]), min(self.df[x_col]))
+            ax.set_xlim(max(x), min(y))
         elif x_bounds != None:
             ax.set_xlim(x_bounds[0], x_bounds[1])
         if rev_y:
-            ax.set_ylim(max(self.df[y_col]), min(self.df[y_col]))
+            ax.set_ylim(max(y), min(y))
         elif y_bounds != None:
             ax.set_ylim(y_bounds[0], y_bounds[1])
 
@@ -344,18 +350,33 @@ class Graph(DataContainer):
             ax.yaxis.set_major_formatter(ticker.PercentFormatter(decimals=2))
             ax.xaxis.set_major_formatter(ticker.PercentFormatter(decimals=2))
 
+        if reg_line:
+            self.add_regline(x, y)
+
         del scatter_data
 
         return plt.show()
 
-    def scatter_two_percs(self, cols, title):
-        self.scatter(cols[0], cols[1], title = title, xlabel = cols[0],
+    def scatter_two_percs(self, cols, title, reg_line = False):
+        self.scatter(x_col=cols[0], y_col=cols[1], title = title,
+                     xlabel = cols[0],
                      ylabel = cols[1], alpha = .25, label_percs=True,
                      x_bounds=[-0.025, 1.025],
                      y_bounds=[-0.025,1.025],
                      x_low_limit=0.01,x_high_limit=0.99,
-                     y_low_limit=0.01,y_high_limit=0.99)
+                     y_low_limit=0.01,y_high_limit=0.99, reg_line = reg_line)
+
         return
+
+    def add_regline(self, x, y):
+        # https://stackoverflow.com/questions/19068862/how-to-overplot-a\
+        # -line-on-a-scatter-plot-in-python, user: 1"
+        plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)),
+            c='black')
+        return
+
+class BaseData()
+    pass
 
 class SchoolData(DataCleaner, Graph):
     """
@@ -711,14 +732,16 @@ df = pd.read_csv('2016 School Explorer.csv')
 # print(df.shape)
 # Load data into a SchoolData Class
 data = SchoolData(df, figwidth=11, figheight=7)
-
+#%%
 # data.sum_col_barplot(cols = ['Grade 3 4s Total', 'Grade 4 4s Total',
 #     'Grade 5 4s Total','Grade 6 4s Total','Grade 7 4s Total',
 #     'Grade 8 4s Total'], names = ['Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
 #     'Grade 7', 'Grade 8'], title = 'Number of 4s Scored by Grade',
 #     xlabel = 'Grade', ylabel = 'Number of 4s',
 #     pos_gap = 40)
-#
+#     #TODO: x-axis column names not displaying correctly, steal solution
+#     # from two_shared_barplot
+# #%%
 # cols = data.column_generator(subject = 'both')
 # data.two_shared_barplot(barWidth = 1,
 #                         col_1 = [i for i in cols if 'Math' in i],
@@ -730,15 +753,73 @@ data = SchoolData(df, figwidth=11, figheight=7)
 #                         title = 'Proportion of 4s by Subject',
 #                         xlabel = 'Grades',
 #                         ylabel = '% of 4s')
-#
+# #%%
 # data.scatter_two_percs(['Percent of Students Chronically Absent', 'Total 4 %'],
-#      title = "Total 4 % for Chronically Absent Students")
-#
+#      title = "Total 4 % for Chronically Absent Students", reg_line=True)
+# #%%
 # data.scatter_two_percs(['Economic Need Index', 'Total 4 %'],
-#      title = "Total 4 % by ENI")
+#      title = "Total 4 % by ENI", reg_line=True)
 
-#%% 
 data.df.head(1)
 #%%
-data.scatter_two_percs(['Percent Hispanic', 'Total 4 %'],
-     title = "")
+com_fun = lambda x:x.value_counts().index[0]
+dis_df = Graph(df.groupby('District').agg({
+                       'School Name':'count',
+                       'City': com_fun,
+                       'Economic Need Index': 'mean',
+                       'School Income Estimate': 'mean',
+                       'Percent ELL': 'mean',
+                       'Percent Asian': 'mean',
+                       'Percent Hispanic': 'mean',
+                       'Percent Black / Hispanic': 'mean',
+                       'Percent White': 'mean',
+                       'Percent of Students Chronically Absent': 'mean',
+                       'Rigorous Instruction %': 'mean',
+                       'Rigorous Instruction Rating': com_fun,
+                       'Collaborative Teachers %': 'mean',
+                       'Collaborative Teachers Rating': com_fun,
+                       'Supportive Environment %': 'mean',
+                       'Supportive Environment Rating': com_fun,
+                       'Effective School Leadership %': 'mean',
+                       'Effective School Leadership Rating': com_fun,
+                       'Strong Family-Community Ties %': 'mean',
+                       'Strong Family-Community Ties Rating':com_fun,
+                       'Trust %': 'mean',
+                       'Trust Rating': com_fun,
+                       'Student Achievement Rating': com_fun,
+                       'Average ELA Proficiency': 'mean',
+                       'Average Math Proficiency': 'mean',
+                       'White Students Total': 'sum',
+                       'Asian / Pacific Islanders Students Total': 'sum',
+                       'Black Students Total': 'sum',
+                       'Hispanic / Latino Students Total': 'sum',
+                       'American Indian / Alaska Native Students Total': 'sum',
+                       'Multiracial Students Total': 'sum',
+                       'Limited English Students Total': 'sum',
+                       'Economically Disadvantaged Students Total': 'sum',
+                       'Students Tested Total': 'sum',
+                       'Student Tested 4s': 'sum',
+                       'Math Tested Total': 'sum',
+                       'Math Tested 4s': 'sum',
+                       'ELA Tested Total': 'sum',
+                       'ELA Tested 4s': 'sum',
+                       'Total 4 %': 'mean',
+                       'Math Prop 4': 'mean',
+                       'ELA Prop 4': 'mean',
+                       '4 Tested Total': 'sum',
+                       'Ethnicity Tested Total': 'sum',
+                       'Nonreported Ethnicity Total': 'sum',
+                       'Income Bin': com_fun,
+                       'ENI Bin': com_fun,
+                       'Total % Bin': com_fun
+                       }))
+dis_df.df
+dis_df.scatter_two_percs(['Economic Need Index', 'Total 4 %'],
+     title = "Total 4 % by ENI", reg_line=True)
+DataContainer.corr_one_col(dis_df, 'Total 4 %')
+
+#%%
+data.corr_one_col('Total 4 %')
+#%%
+data.scatter_two_percs(['Percent Black / Hispanic', 'Total 4 %'],
+     title = "", reg_line=True)

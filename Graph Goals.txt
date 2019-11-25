@@ -5,21 +5,14 @@ Graph Goals
 
 	Organizational goals:
 		- Sketch some graphs that I want to create
-		- Find out how to update github from Atom
+		- ***Separate this into more than one file for testing purposes please.
 
 	Classes
-		- Create a Graph class that has all the graphing methods and necessary
-			variables in a separate place than Data
-		- Graph has to be able to graph, which means it has to have access to data,
-			therefore, it must inherit from Data. But, does that mean that Data is bad
-			name for the class? I think so.
-		-	DataContainer
-			- DataCleaner
-			- Graph
-				- SchoolData
+		- Create a class that inherits from Graph, DataCleaner and DataContainer
+			So I can utilize all those same methods subsets of DataFrames
 
 	Methods
-		- Add a possible regression line method to graphs
+		- Overwrite the groupby method
 
 	Ideas
 		So, what is the next goal for graphs? What do we want to visualize currently?
@@ -28,6 +21,15 @@ Graph Goals
 			- What type of graph do you want to utilize?
 		- Average ELA / Math Proficiency
 
-
 	Notes
-		-
+		- Interesting relationships
+			- Percentage of white students is HIGHLY correlated with all measures of
+				Attendance, Rigorous Instruction, Strong Community Family Ties,
+				Supportive Environment, Effective School Leadership and Collaborative
+				Teachers
+			- Seems to a correlation between School Income Estimate and grades. Schools with younger students seem to get more money than schools with older Students
+			-
+
+	Since last commit
+		- Added regression line method
+		- Can generate pearsonr values for a single column easily with a method
