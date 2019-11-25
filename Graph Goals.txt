@@ -1,7 +1,7 @@
 Graph Goals
 
-	Now that the class is defined and my data munging / feature engineering is where I want it to be,
-	I want to do some basic graphs and exploring of the dataset
+	Now that the class is defined and my data munging / feature engineering is
+	here I want it to be, I want to do some basic graphs and exploring of the dataset
 
 	Organizational goals:
 		- Sketch some graphs that I want to create
@@ -10,11 +10,16 @@ Graph Goals
 	Classes
 		- Create a Graph class that has all the graphing methods and necessary
 			variables in a separate place than Data
+		- Graph has to be able to graph, which means it has to have access to data,
+			therefore, it must inherit from Data. But, does that mean that Data is bad
+			name for the class? I think so.
+		-	DataContainer
+			- DataCleaner
+			- Graph
+				- SchoolData
 
 	Methods
 		- Create some specific graphing methods for each Class
-		- Ensure that each method does ONLY one thing
-		- Are all the methods within a class meant for that Class? Should they be split into a different class?
 		- Organize classes in order, privates and publics together, by theme, etc.
 
 	Ideas
@@ -26,7 +31,4 @@ Graph Goals
 
 
 	Notes
-		- 'Math Tested Total' is returning 0 for some rows. My theory is that it's not counting 'Grade 3' correctly
-			- Grade 3 is definitely not showing
-		- Fixed an issue where Grade 3 wasn't represented in 'Grade 3 Math Tested Total' Because
-		of a spelling mistake not being fixed before the sum
+		-

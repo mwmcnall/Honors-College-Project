@@ -10,20 +10,46 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 
-class Data:
+class DataContainer:
     """
-    A wrapper class for the pandas DataFrame data type
-
-    Used to store convenient exploratory data functions
+    A wrapper class for the pandas DataFrame data type. Contains methods
+    designed to explore a DataFrame
     """
-    def __init__(self, df, figwidth=15, figheight=7):
+    def __init__(self, df):
         """
         Constructor clss for Data
         """
         self.df = df
-        self.length = len(df)
-        self.figwidth = figwidth
-        self.figheight = figheight
+
+    def _column_bin(self, **kwargs):
+        """
+        Generates categorical columns based on numerical values, automatically
+        splitting based on inputted bin size
+
+        :param new_col: The new column to create
+        :param bin_size: The number of bins to separate the data into
+        :param labels: The labels to assign to each newly created bin
+        """
+        assert len(kwargs['labels']) == kwargs['bin_size'], ("You must assign"
+            "the same number of labels as the number of bins you are creating")
+        self.df[kwargs['new_col']] = pd.cut(self.df[kwargs['cut_col']],
+                                            kwargs['bin_size'],
+                                            labels=kwargs['labels'])
+        return
+
+    def _column_div(self, **kwargs):
+        """
+        Generates columns through division based on a numerator and
+        denominator column
+
+        :param new_col: The new column to create
+        :param div_top: The numerator of the division call
+        :param div_bot: The denominator of the division call
+        """
+        self.df[kwargs['new_col']] = (self.df[kwargs['div_top']] /
+                                      self.df[kwargs['div_bot']]).fillna(0)
+
+        return
 
     def nans(self, threshold=0, silence=False):
         """
@@ -60,6 +86,53 @@ class Data:
                 return_list.append(col_name)
         return return_list
 
+    def drop_cols(self, col_list):
+        """
+        Takes in a list of columns and drops them, in-place
+
+        :param col_list: A list of columns to drop
+        :return: Nothing, the operation happens in-place
+
+        """
+        # axis = 1 represents dropping from columns. 0 would be index
+        self.df.drop(col_list, axis=1, inplace=True)
+
+        return
+
+    def dict_fun_run(self, dic, fun):
+        """
+        Iterates a function over a nested dictionary of dictionaries
+
+        :param dict: Takes a nested dictionary in this form.
+            {1:{'fizz':'buzz'}, 2:{'buzz':'fizz'}}
+        :return: Nothing, just runs the given function over the items in the
+            dictionary
+        """
+        for item in dic.items():
+            fun(**item[1])
+
+        return
+
+    def lol_to_set(self, col, splitby):
+        """
+        Converts a column of list of lists to a set of unique values
+
+        :param col: The column of the dataframe to reduce
+        :splitby: The character
+        """
+        return set([j for sub in
+                   [i.split(splitby) for i in
+                    self.df[col].values.tolist()]
+                    for j in sub])
+
+class DataCleaner(DataContainer):
+    """
+    A class that inherits from DataContainer, designed to use methods to help
+    clean data
+    """
+    def __init__(self, df):
+        super().__init__(df)
+
     def dollarsToDigits(self, s):
         """
         Converts the string representation of a budget into a float
@@ -93,63 +166,6 @@ class Data:
             return(0)
         return(float(s) / 100)
 
-    def drop_cols(self, col_list):
-        """
-        Takes in a list of columns and drops them, in-place
-
-        :param col_list: A list of columns to drop
-        :return: Nothing, the operation happens in-place
-
-        """
-        # axis = 1 represents dropping from columns. 0 would be index
-        self.df.drop(col_list, axis=1, inplace=True)
-
-        return
-
-    def dict_fun_run(self, dic, fun):
-        """
-        Iterates a function over a nested dictionary of dictionaries
-
-        :param dict: Takes a nested dictionary in this form.
-            {1:{'fizz':'buzz'}, 2:{'buzz':'fizz'}}
-        :return: Nothing, just runs the given function over the items in the
-            dictionary
-        """
-        for item in dic.items():
-            fun(**item[1])
-
-        return
-
-    def _column_bin(self, **kwargs):
-        """
-        Generates categorical columns based on numerical values, automatically
-        splitting based on inputted bin size
-
-        :param new_col: The new column to create
-        :param bin_size: The number of bins to separate the data into
-        :param labels: The labels to assign to each newly created bin
-        """
-        assert len(kwargs['labels']) == kwargs['bin_size'], ("You must assign"
-            "the same number of labels as the number of bins you are creating")
-        self.df[kwargs['new_col']] = pd.cut(self.df[kwargs['cut_col']],
-                                            kwargs['bin_size'],
-                                            labels=kwargs['labels'])
-        return
-
-    def _column_div(self, **kwargs):
-        """
-        Generates columns through division based on a numerator and
-        denominator column
-
-        :param new_col: The new column to create
-        :param div_top: The numerator of the division call
-        :param div_bot: The denominator of the division call
-        """
-        self.df[kwargs['new_col']] = (self.df[kwargs['div_top']] /
-                                      self.df[kwargs['div_bot']]).fillna(0)
-
-        return
-
     def imputer(self, col, miss_value=np.NaN, strat='median'):
         """
         Runs an imputation strategy of the user's choice and assigns that back
@@ -177,20 +193,38 @@ class Data:
 
         return
 
-    def lol_to_set(self, col, splitby):
-        """
-        Converts a column of list of lists to a set of unique values
+class Graph(DataContainer):
+    """
+    A class that inherits from DataContainer, designed to make graphing with
+    DataFrames somewhat more customized for my needs
+    """
+    def __init__(self, df, figwidth=15, figheight=7):
+        super().__init__(df)
+        self.figwidth = figwidth
+        self.figheight = figheight
 
-        :param col: The column of the dataframe to reduce
-        :splitby: The character
-        """
-        return set([j for sub in
-                   [i.split(splitby) for i in
-                    self.df[col].values.tolist()]
-                    for j in sub])
+        return
 
-    def sum_col_barplot(self, cols, title, xlabel, ylabel, figwidth, figheight,
-                        names, pos_gap=10):
+    def _create_plot(self, title, xlabel, ylabel):
+        """
+        Creates a single figure and then labels it
+        """
+        ax = figure(figsize=(self.figwidth, self.figheight)).subplots(1)
+
+        self._plot_label(ax, title, xlabel, ylabel)
+
+        return ax
+
+    def _plot_label(self, ax, title, xlabel, ylabel):
+        """
+        Adds labels to the plot
+        """
+        ax.set_title(title)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        return
+
+    def sum_col_barplot(self, cols, title, xlabel, ylabel, names, pos_gap=10):
         """
         Sums the columns sent in and plots them in the order that they were
         given
@@ -206,8 +240,7 @@ class Data:
         for col in cols:
             vals.append(self.df[col].sum())
 
-        ax = self._create_plot(title, xlabel, ylabel, figwidth=figwidth,
-                              figheight=figheight)
+        ax = self._create_plot(title, xlabel, ylabel)
 
         # Chooses the position of each barplots on the x-axis
         y_pos = [i * pos_gap for i in range(0, len(cols))]
@@ -218,16 +251,18 @@ class Data:
 
         return
 
-    def two_shared_barplot(self, figwidth, figheight, barWidth, col_1, col_2,
+    def two_shared_barplot(self, barWidth, col_1, col_2,
                            label_1, label_2, section_labels, title, xlabel,
                            ylabel, col_spacing=3, color1='red', color2='blue'):
+        """
+
+        """
         assert len(col_1) == len(col_2), ("Function designed only for columns"
             "with exactly the same length.")
         assert len(col_1) == len(section_labels), ("Length of column 1 and"
             "number of section labels must be same.")
 
-        ax = self._create_plot(title, xlabel, ylabel, figwidth=figwidth,
-                              figheight=figheight)
+        ax = self._create_plot(title, xlabel, ylabel)
 
         col_1_data = []
         # Calculates the total of totals
@@ -251,40 +286,47 @@ class Data:
 
         ax.legend()
 
-        ax.set_xticks(col_2_loc, section_labels)
-        # plt.yticks()
-        ax.yaxis.set_major_formatter(ticker.PercentFormatter())
+        plt.xticks(col_1_loc, section_labels)
+        ax.yaxis.set_major_formatter(ticker.PercentFormatter(decimals=2))
 
         # plt.show()
         return
 
-    # TODO: Change name of this to _create_plot()
-    def _create_plot(self, title, xlabel, ylabel, figwidth=None,
-                     figheight=None):
-        ax = figure(figsize=(figwidth, figheight)).subplots(1)
+    def scatter(self, x_col, y_col, title, xlabel, ylabel, x_bounds=None,
+                y_bounds=None, alpha=1, c=None, label_percs = False,
+                rev_x = False, rev_y = False, x_low_limit = -9**999,
+                x_high_limit=9**999, y_low_limit = -9**999,
+                y_high_limit=9**999):
+        """
+        Creates a scatterplot of the data given
 
-        if not figwidth:
-            figwidth = self.figwidth
-        if not figheight:
-            figheight = self.figheight
-        self._plot_label(ax, title, xlabel, ylabel)
+        :param x_col: Data on the x column
+        :param y_col: Data on the y column
+        :param x_bounds: Limit or reverse the x-axis data
+        :param y_bounds: Limit or reverse the y-axis data
+        :param label_percs: Set to True to get percentages to 2-decimal places
+            on both axes
+        :param rev_x: Reverse x-axis if True
+        :param rev_y: Reverse y-axis if True
+        :param x_low_limit: Lower-limit for x-axis' data, inclusive
+        :param y_low_limit: Lower-limit for y-axis' data, inclusive
+        :param x_high_limit: Upper-limit for x-axis' data, inclusive
+        :param y_high_limit: Upper-limit for y-axis' data, inclusive
+        :return: The scatterplot generated
+        """
+        #TODO: Come up with a better idea for the default limit sizes
+        #TODO: label_percs forces percentages on both axes atm, would be
+            # smarter to be able to set either axis
 
-        return ax
+        ax = self._create_plot(title, xlabel, ylabel)
 
-    def _plot_label(self, ax, title, xlabel, ylabel):
-        ax.set_title(title)
-        ax.set_xlabel(xlabel)
-        ax.set_ylabel(ylabel)
-        return
+        scatter_data = self.df[(self.df[x_col] >= x_low_limit) &
+                        (self.df[x_col] <= x_high_limit) &
+                        (self.df[y_col] >= y_low_limit) &
+                        (self.df[y_col] <= y_high_limit)]
 
-    def scatter(self, x_col, y_col, title, xlabel, ylabel, figwidth, figheight,
-                x_bounds=None, y_bounds=None, alpha=1, c=None, label_percs = False,
-                rev_x = False, rev_y = False):
-
-        ax = self._create_plot(title, xlabel, ylabel, figwidth=figwidth,
-                              figheight=figheight)
-
-        ax.scatter(self.df[x_col], self.df[y_col],
+        ax.scatter(scatter_data[x_col],
+                   scatter_data[y_col],
                     alpha=alpha,
                     c=c)
         ax.grid(True)
@@ -299,19 +341,34 @@ class Data:
             ax.set_ylim(y_bounds[0], y_bounds[1])
 
         if label_percs:
-            ax.yaxis.set_major_formatter(ticker.PercentFormatter())
-            ax.xaxis.set_major_formatter(ticker.PercentFormatter())
+            ax.yaxis.set_major_formatter(ticker.PercentFormatter(decimals=2))
+            ax.xaxis.set_major_formatter(ticker.PercentFormatter(decimals=2))
+
+        del scatter_data
 
         return plt.show()
 
+    def scatter_two_percs(self, cols, title):
+        self.scatter(cols[0], cols[1], title = title, xlabel = cols[0],
+                     ylabel = cols[1], alpha = .25, label_percs=True,
+                     x_bounds=[-0.025, 1.025],
+                     y_bounds=[-0.025,1.025],
+                     x_low_limit=0.01,x_high_limit=0.99,
+                     y_low_limit=0.01,y_high_limit=0.99)
+        return
 
-class SchoolData(Data):
+class SchoolData(DataCleaner, Graph):
     """
         A Data-inherited class designed to specifically deal with dataset
     """
 
-    def __init__(self, df):
+    def __init__(self, df, figwidth, figheight):
+        """
+        Constructor method for SchoolData
+        """
         super().__init__(df)
+        self.figwidth=figwidth
+        self.figheight=figheight
         # A collection of columns that will be created and summed based on the
         # arguments sent into columnGenerator
         self.__sum_dict = {
@@ -426,11 +483,29 @@ class SchoolData(Data):
         """
         self._rename_cols()
         self._type_correction()
-        self._feature_engineering()
+        # Set to retain only unique items, filled with some base columns
+        # I won't be using
+        drop_cols = set(['Adjusted Grade', 'New?',
+                         'Other Location Code in LCGMS',
+                         'SED Code', 'Location Code',
+                         'Address (Full)'])
+        drop_cols = self._feature_engineering(drop_cols)
+        # Make sure not to drop columns concerning all students
+        drop_cols = [i for i in drop_cols if 'All Students' not in i]
+        # Drop superfluous columns
+        self.drop_cols(drop_cols)
+
+        # Organize grades
+        self._grade_combination()
+        # Impute numerical columns
         self.dict_fun_run(self.__impute_dict, self.imputer)
+        # Impute categorical columns
         for col in self.__cat_impute:
             self.cat_impute(col)
+        # Create Boolean columns for different grades
         self._grade_bools()
+        del self.__impute_dict
+        del self.__cat_impute
 
     def _rename_cols(self):
         """
@@ -441,6 +516,143 @@ class SchoolData(Data):
                                 'Grade 3 Math - All Students Tested'},
                        inplace=True)
 
+        return
+
+    def _type_correction(self):
+        """
+        A function for all type corrections
+        """
+        # Convert from dollars to a float
+        self.df['School Income Estimate'] = \
+            self.df['School Income Estimate'].apply(self.dollarsToDigits)
+
+        # Converts all object style percents to float style percents
+        for col in self.__perc_cols:
+            self.df[col] = self.df[col].apply(self.percents_to_floats)
+
+        # Convert column to type Boolean
+        self.df['Community School?'] = self.df['Community School?'].map(
+            {'Yes': 1, 'No': 0})
+
+        return
+
+    def _misc_features(self):
+        """
+        A collection of operations to help readability and processing of data
+        These fit outside the order of the logical feature engineering order,
+        they are needed to be able to engineer the rest of the featuers.
+        """
+        # Column needed for upcoming processing
+        self.df['4 Tested Total'] = self.df['Math Tested 4s'] + \
+            self.df['ELA Tested 4s']
+        column_4s = ['White Students Total',
+                     'Asian / Pacific Islanders Students Total',
+                     'Black Students Total',
+                     'Hispanic / Latino Students Total',
+                     'American Indian / Alaska Native Students Total',
+                     'Multiracial Students Total']
+
+        # Operations that fit outside the dictionaries for organization regions
+        self.df['Ethnicity Tested Total'] = \
+            self.df[column_4s].apply(sum, axis=1)
+        self.df['Nonreported Ethnicity Total'] = \
+            self.df['4 Tested Total'] - self.df['Ethnicity Tested Total']
+        self.df['Nonreported Ethnicity %'] = \
+            (self.df['Nonreported Ethnicity Total'] /
+             self.df['4 Tested Total']).fillna(0)
+
+        return
+
+    def _feature_engineering(self, drop_cols):
+        """
+        Organizes, cleans, and feature engineers columns for the data
+
+        Responsibilities:
+            - Fixes some readability
+            - Columns based around sums
+            - Columns based around division
+            - Columns based around bins
+            - Organizes the Grades
+            - Drops superfluous columns
+        """
+        # Engineer all features that involve sums
+        drop_cols = self._process_drop_features(self.__sum_dict, drop_cols)
+
+        # Help make the data more readable, must be called after the above line
+        self._misc_features()
+
+        # Engineer all features that involve division
+        self.dict_fun_run(self.__div_dict, self._column_div)
+        # Engineer all features that involve bins (pd.cut)
+        self.dict_fun_run(self.__bin_dict, self._column_bin)
+
+        del self.__sum_dict
+        del self.__bin_dict
+        del self.__div_dict
+        del self.__perc_cols
+
+        return drop_cols
+
+    def _column_sum(self, **kwargs):
+        """
+        Generates columns using column_generator, sums them, and assigns them
+        to a new column
+
+        :return: The list of columns that were summed based on the **kwargs
+            arguments sent in
+        """
+        col_data = self.column_generator(subject=kwargs['subject'],
+                                         students=kwargs['students'],
+                                         test=kwargs['test'])
+        self.df[kwargs['new_col']] = self.df[col_data].apply(sum, axis=1)
+        return(col_data)
+
+    def _process_drop_features(self, dic, drop_cols):
+        """
+        Using column_generator and _column_sum, adds all of the values of the
+        columns generated and stores the sum into the provided column in
+        new_col
+
+        :param drop_cols: A set that will be updated with columns to drop
+        :return: A set of columns
+        """
+        # new_col is the name of the new column that will be updated with the
+        # sums of all values generated by column_generator
+        # Each nested dictionary acts as a list of **kwargs arguments for
+        # _column_sum
+
+        for item in dic.items():
+            drop_cols.update(self._column_sum(**item[1]))
+
+        return drop_cols
+
+    def _grade_combination(self):
+        """
+        Sums all the like Grades 4 scores and stores it in a new total column
+
+        :return: Nothing, all columns are assigned in the function
+        """
+        cols = list(self.df.columns)
+        for grade in range(3, 8 + 1):
+            col_data = [i for i in cols if ('Grade ' + str(grade) in i) and
+                        ('All Students' in i) and
+                        ('Tested' not in i)]
+            self.df['Grade ' + str(grade) + ' 4s Total'] = \
+                self.df[col_data].apply(sum, axis=1)
+        del cols
+        return
+
+    def _grade_bools(self):
+        """
+        Create a boolean column for each possible grade
+        """
+        grades = self.lol_to_set(col='Grades', splitby=',')
+
+        for grade in grades:
+            self.df[grade] = False
+
+        for grade in grades:
+            self.df.loc[self.df['Grades'].str.contains(grade), grade] = True
         return
 
     def column_generator(self, subject='both', students='All Students',
@@ -494,188 +706,37 @@ class SchoolData(Data):
         else:
             return -1  # An error has occurred
 
-    def _type_correction(self):
-        """
-        A function for all type corrections
-        """
-        # Convert from dollars to a float
-        self.df['School Income Estimate'] = \
-            self.df['School Income Estimate'].apply(self.dollarsToDigits)
-
-        # Converts all object style percents to float style percents
-        for col in self.__perc_cols:
-            self.df[col] = self.df[col].apply(self.percents_to_floats)
-
-        # Convert column to type Boolean
-        self.df['Community School?'] = self.df['Community School?'].map(
-            {'Yes': 1, 'No': 0})
-
-        return
-
-    def _clean_data(self):
-        """
-        A collection of operations to help readability and processing of data
-        """
-
-        # Column needed for upcoming processing
-        self.df['4 Tested Total'] = self.df['Math Tested 4s'] + \
-            self.df['ELA Tested 4s']
-        column_4s = ['White Students Total',
-                     'Asian / Pacific Islanders Students Total',
-                     'Black Students Total',
-                     'Hispanic / Latino Students Total',
-                     'American Indian / Alaska Native Students Total',
-                     'Multiracial Students Total']
-
-        # Operations that fit outside the dictionaries for organization regions
-        self.df['Ethnicity Tested Total'] = \
-            self.df[column_4s].apply(sum, axis=1)
-        self.df['Nonreported Ethnicity Total'] = \
-            self.df['4 Tested Total'] - self.df['Ethnicity Tested Total']
-        self.df['Nonreported Ethnicity %'] = \
-            (self.df['Nonreported Ethnicity Total'] /
-             self.df['4 Tested Total']).fillna(0)
-
-        return
-
-    def _feature_engineering(self):
-        """
-        Organizes, cleans, and feature engineers columns for the data
-
-        Responsibilities:
-            - Fixes some readability
-            - Columns based around sums
-            - Columns based around division
-            - Columns based around bins
-            - Organizes the Grades
-            - Drops superfluous columns
-        """
-
-        # Set to retain only unique items, filled with some base columns
-        # I won't be using
-        drop_cols = set(['Adjusted Grade', 'New?',
-                         'Other Location Code in LCGMS',
-                         'SED Code', 'Location Code',
-                         'Address (Full)'])
-
-        # Engineer all features that involve sums
-        drop_cols = self._process_drop_features(self.__sum_dict, drop_cols)
-
-        # Help make the data more readable, must be called after the above line
-        self._clean_data()
-
-        # Engineer all features that involve division
-        self.dict_fun_run(self.__div_dict, self._column_div)
-        # Engineer all features that involve bins (pd.cut)
-        self.dict_fun_run(self.__bin_dict, self._column_bin)
-        # Organize grades
-        self._grade_combination()
-
-        # Make sure not to drop columns concerning all students
-        drop_cols = [i for i in drop_cols if 'All Students' not in i]
-
-        # Drop superfluous columns
-        self.drop_cols(drop_cols)
-
-        del self.__sum_dict
-        del self.__bin_dict
-        del self.__div_dict
-        del self.__perc_cols
-
-        return
-
-    def _column_sum(self, **kwargs):
-        """
-        Generates columns using column_generator, sums them, and assigns them
-        to a new column
-
-        :return: The list of columns that were summed based on the **kwargs
-            arguments sent in
-        """
-        col_data = self.column_generator(subject=kwargs['subject'],
-                                         students=kwargs['students'],
-                                         test=kwargs['test'])
-        self.df[kwargs['new_col']] = self.df[col_data].apply(sum, axis=1)
-        return(col_data)
-
-    def _process_drop_features(self, dic, drop_cols):
-        """
-        Using column_generator and _column_sum, adds all of the values of the
-        columns generated and stores the sum into the provided column in
-        new_col
-
-        :param drop_cols: A set that will be updated with columns to drop
-        :return: A set of columns
-        """
-        # new_col is the name of the new column that will be updated with the
-        # sums of all values generated by column_generator
-        # Each nested dictionary acts as a list of **kwargs arguments for
-        # _column_sum
-
-        for item in dic.items():
-            drop_cols.update(self._column_sum(**item[1]))
-
-        return drop_cols
-
-    def _grade_combination(self):
-        """
-        Sums all the like Grades 4 scores and stores it in a new total column
-
-        :return: Nothing, all columns are assigned in the function
-        """
-        cols = list(self.df.columns)
-        for grade in range(3, 8 + 1):
-            col_data = [i for i in cols if ('Grade ' + str(grade) in i) and
-                        ('All Students' in i) and
-                        ('Tested' not in i)]
-            self.df['Grade ' + str(grade) + ' 4s Total'] = \
-                self.df[col_data].apply(sum, axis=1)
-        return
-
-    def _grade_bools(self):
-        """
-        Create a boolean column for each possible grade
-        """
-        grades = self.lol_to_set(col='Grades', splitby=',')
-
-        for grade in grades:
-            self.df[grade] = False
-
-        for grade in grades:
-            self.df.loc[self.df['Grades'].str.contains(grade), grade] = True
-        return
-
 
 df = pd.read_csv('2016 School Explorer.csv')
 # print(df.shape)
 # Load data into a SchoolData Class
-data = SchoolData(df)
-# data.df.head(3)
+data = SchoolData(df, figwidth=11, figheight=7)
+data.df.head(1)
 #%%
 data.sum_col_barplot(cols = ['Grade 3 4s Total', 'Grade 4 4s Total',
     'Grade 5 4s Total','Grade 6 4s Total','Grade 7 4s Total',
     'Grade 8 4s Total'], names = ['Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
     'Grade 7', 'Grade 8'], title = 'Number of 4s Scored by Grade',
-    xlabel = 'Grade', ylabel = 'Number of 4s', figwidth = 11, figheight = 7,
+    xlabel = 'Grade', ylabel = 'Number of 4s',
     pos_gap = 40)
 
 #%%
 cols = data.column_generator(subject = 'both')
-data.two_shared_barplot(figwidth = 11, figheight = 7, barWidth = 1,
+data.two_shared_barplot(barWidth = 1,
                         col_1 = [i for i in cols if 'Math' in i],
                         col_2 = [i for i in cols if 'ELA' in i],
                         label_1 = 'Math',
                         label_2 = 'ELA',
-                        section_labels = ['Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8'],
+                        section_labels = ['Grade 3', 'Grade 4', 'Grade 5',
+                            'Grade 6', 'Grade 7', 'Grade 8'],
                         title = 'Proportion of 4s by Subject',
                         xlabel = 'Grades',
                         ylabel = '% of 4s')
 
 # %%
-cols = ['Total 4 %', 'Percent of Students Chronically Absent']
+data.scatter_two_percs(['Percent of Students Chronically Absent', 'Total 4 %'],
+     title = "Total 4 % for Chronically Absent Students")
 
-data.scatter(cols[1],cols[0],
-             title = "Total 4 % for Chronically Absent Students",
-             xlabel = cols[1], ylabel = cols[0], figwidth=11, figheight=7,
-             alpha = .25, label_percs=True, x_bounds=[1.025, -0.025],
-             y_bounds=[-0.025,1.025])
+#%%
+data.scatter_two_percs(['Economic Need Index', 'Total 4 %'],
+     title = "Total 4 % by ENI")
