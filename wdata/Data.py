@@ -3,7 +3,7 @@ from .Graph import Graph
 
 class Data(Graph, DataCleaner):
     """
-    Test
+    Class that has Graphing and Data Cleaning methods
     """
     def __init(self, df, figwidth, figheight, **kwargs):
         super().__init__(df, figwidth, figheight, **kwargs)

@@ -6,13 +6,24 @@ class DataContainer:
     A wrapper class for the pandas DataFrame data type. Contains methods
     designed to explore a DataFrame
     """
-    def __init__(self, df):
+    def __init__(self, df, **kwargs):
         """
         Constructor class for DataContainer
         """
         self.df = df
 
         return
+
+
+    def data_object_col_merge(self, data_object, merge_col, on):
+        """
+        Merges one column from the self.dis.df DataFrame to the main self.df
+        DataFrame
+        """
+        self.df = self.df.merge(right=pd.DataFrame(data_object.df[merge_col]),
+            on=on)
+        return
+
 
     def _column_bin(self, **kwargs):
         """
@@ -23,8 +34,8 @@ class DataContainer:
         :param bin_size: The number of bins to separate the data into
         :param labels: The labels to assign to each newly created bin
         """
-#         assert len(kwargs['labels']) == kwargs['bin_size'], "You must assign\
-# the same number of labels as the number of bins you are creating"
+        # assert len(kwargs['labels']) == kwargs['bin_size'], ("You must assign"
+        #     "the same number of labels as the number of bins you are creating")
         self.df[kwargs['new_col']] = pd.cut(self.df[kwargs['cut_col']],
                                             kwargs['bin_size'],
                                             labels=kwargs['labels'])
@@ -45,6 +56,13 @@ class DataContainer:
         return
 
     def corr_one_col(self, col, low_bound = -1, high_bound = 1):
+        """
+        Returns the correlations between one column and the rest of the columns
+        in the dataset
+        :param col: The column to get the correlation of
+        :param low_bound: Only returns correlations greater than this bound
+        :param high_bound: Only returns correlations lower than this bound
+        """
         corr = self.df.corr()[col].sort_values()
         corr = corr[corr > low_bound]
         corr = corr[corr < high_bound]
