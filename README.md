@@ -1,2 +1,2 @@
-# Honors-College-Project
-For my Comp-Sci 101 class at UMKC
+
+[Test Link](https://nbviewer.jupyter.org/github/mwmcnall/Honors-College-Project/blob/master/Honors%20College%20Data%20stuff.slides.html#/
