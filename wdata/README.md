@@ -11,3 +11,6 @@ This is a collection of classes that I made for the sake of this project that wa
 
 ## Graph
 - Graphing methods, currently all organized into a single Class
+
+## Data
+- A class multiple-inheritance class that combines the above classes. Meant to be inherited from for easy-access to all written methods
