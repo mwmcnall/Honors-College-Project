@@ -24,7 +24,6 @@ class SchoolData(SchoolOrganize, SchoolGraph):
             self.car_read()
             self._transform_data()
             self._calculate_in_need()
-            self._final_drop()
 
     def retail_read(self):
         """
@@ -265,7 +264,11 @@ class SchoolData(SchoolOrganize, SchoolGraph):
             10: {'pre_col':'Math Prop 4', 'invert':True, 'weight':0.6},
             11: {'pre_col':'ELA Prop 4', 'invert':True, 'weight':0.6},
             12: {'pre_col':'Percent of Students Chronically Absent',
-                'weight':0.25}
+                'weight':0.25},
+            13: {'pre_col':'Nonreported Ethnicity %',
+                'weight':0.15},
+            14: {'pre_col':'Students Tested Total', 'invert':True,
+                'weight':0.15}
         }
         # Computes all straight-forward weighted scores
         self.dict_fun_run(pre_dict, self._in_need_calculate)
@@ -275,7 +278,7 @@ class SchoolData(SchoolOrganize, SchoolGraph):
         # has to be handled differently than all other columns
         self.subset_normalized_in_need(col='School Income Estimate',
             weight=0.30, col_greater_than=0.001, filter_greater_than=0.001,
-            invert=False)
+            invert=True)
         # Bin columns from groupby calls
         bin_dict={
             0:{'bin_col':'Total 4 % City Bin', 'lowest':0.30, 'low':0.20,
@@ -337,7 +340,8 @@ class SchoolData(SchoolOrganize, SchoolGraph):
 
     def iterate_bin_need(self, bin_col, lowest, low, medium, high):
         """
-        This is inefficient but it works
+        Iterates through each row and and adds points to In Need Score. This is
+        inefficient but it works
         """
         for index, value in enumerate(self.df[bin_col]):
             self._bin_need_calculate(value, index, lowest, low, medium, high)
@@ -345,7 +349,8 @@ class SchoolData(SchoolOrganize, SchoolGraph):
     def iterate_bin_rating(self, bin_col, not_meeting_target,
         approaching_target, meeting_target, exceeding_target):
         """
-        This is inefficient but it works
+        Iterates through each row and and adds points to In Need Score. This is
+        inefficient but it works
         """
         for index, value in enumerate(self.df[bin_col]):
             self._bin_rating_calculate(value, index, not_meeting_target,
@@ -353,6 +358,10 @@ class SchoolData(SchoolOrganize, SchoolGraph):
 
     def _bin_rating_calculate(self, value, index, not_meeting_target,
         approaching_target, meeting_target, exceeding_target):
+        """
+        Compares the inputted value and adds points to In Need Score based on
+        the variables
+        """
         if value=='Not Meeting Target':
             self.df.loc[index, 'In Need Score'] += not_meeting_target
         elif value=='Approaching Target':
@@ -364,6 +373,10 @@ class SchoolData(SchoolOrganize, SchoolGraph):
         return
 
     def _bin_need_calculate(self, value, index, lowest, low, medium, high):
+        """
+        Compares the inputted value and adds points to In Need Score based on
+        the variables
+        """
         if value=='lowest':
             self.df.loc[index, 'In Need Score'] += lowest
         elif value=='low':
@@ -394,27 +407,6 @@ class SchoolData(SchoolOrganize, SchoolGraph):
             (self.df[col] <= col_less_than),'In Need Score'] += \
             subset_normalized * weight
 
-        return
-
-    def _final_drop(self):
-        """
-        Columns that aren't needed anymore after all my calculations are done
-        Totals are superfluos now that I have proportions.
-        """
-        drop_cols = ['Student Tested 4s', 'Math Tested Total', 'Math Tested 4s',
-            'ELA Tested Total', 'ELA Tested 4s', 'White Students Total',
-            'Asian / Pacific Islanders Students Total',
-            'Black Students Total', 'Hispanic / Latino Students Total',
-            'American Indian / Alaska Native Students Total',
-            'Multiracial Students Total', 'Limited English Students Total',
-            'Economically Disadvantaged Students Total',
-            '4 Tested Total', 'Ethnicity Tested Total',
-            'Nonreported Ethnicity Total', 'Total 4 % City Bin',
-            'School Income City Bin', 'ENI City Bin', 'Total 4 % District Bin',
-            'School Income District Bin','Percent ELL', 'Percent Asian',
-            'Percent Black', 'Percent Hispanic', 'Percent Black / Hispanic',
-            'Percent White']
-        self.drop_cols(drop_cols)
         return
 
     def _misc_features(self):

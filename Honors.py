@@ -1,3 +1,9 @@
+"""
+This file is completely meant for testing. All tested solutions of Python
+code were transferred to an organized position in the Jupyter Notebook
+or within a wdata / school_wdata class or method
+"""
+
 from wdata import *
 from school_wdata import *
 
@@ -11,11 +17,14 @@ data.df['In Need Score'].describe()
 # data._init_cit()
 # data._init_dis()
 # data.df['In Need Score'] = 0
-
-drop_cols = []
-data.df.head()
-#
-data.df.sort_values('In Need Score').tail()
+#%%
+data.grades_bargraph('School Income Estimate',
+    title = 'School Income Estimate by Grades offered at Schools')
+#%%
+# drop_cols = []
+# data.df.head()
+# #
+# data.df.sort_values('In Need Score').tail()
 #
 # data.df['In Need Score'].describe()
 #
